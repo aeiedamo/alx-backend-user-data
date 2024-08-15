@@ -2,11 +2,10 @@
 """DB module
 """
 from sqlalchemy import create_engine, tuple_
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 from user import Base, User
 
 
@@ -17,7 +16,7 @@ class DB:
     def __init__(self) -> None:
         """Initialize a new DB instance
         """
-        self._engine = create_engine("sqlite:///a.db", echo=True)
+        self._engine = create_engine("sqlite:///a.db")
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
@@ -32,36 +31,38 @@ class DB:
         return self.__session
 
     def add_user(self, email: str, hashed_password: str) -> User:
-        """Adds a new user to the database.
-
-        Args:
-            email (str): The email of the user.
-            hashed_password (str): The hashed password of the user.
-
-        Returns:
-            User: The newly created user object.
-
-        Raises:
-            ValueError: If the user cannot be added due to an IntegrityError.
+        """ Creates new User instance and
+            saves them to the database.
+            Args:
+                - email
+                - hashed_password
+            Return:
+                - new User object
         """
+        session = self._session
         try:
-            newUser = User(email=email, hashed_password=hashed_password)
-            self._session.add(newUser)
-            self._session.commit()
-            return newUser
+            new_user = User(email=email, hashed_password=hashed_password)
+            session.add(new_user)
+            session.commit()
         except Exception:
-            self._session.rollback()
-            raise ValueError("User with email {} already exists".format(email))
+            session.rollback()
+            new_user = None
+        return new_user
 
-    def find_user_by(self, **kwargs):
+    def find_user_by(self, **kwargs) -> User:
+        """ Find user by a given attribute
+            Args:
+                - Dictionary of attributes to use as search
+                  parameters
+            Return:
+                - User object
         """
-        Find user with arguments.
-        """
+
         attrs, vals = [], []
         for attr, val in kwargs.items():
             if not hasattr(User, attr):
                 raise InvalidRequestError()
-            attrs.append(getattr(User,attr))
+            attrs.append(getattr(User, attr))
             vals.append(val)
 
         session = self._session
