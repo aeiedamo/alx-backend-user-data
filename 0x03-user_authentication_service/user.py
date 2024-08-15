@@ -5,8 +5,8 @@ User authentication service
 
 from sqlalchemy import Column, Integer, String, column
 from sqlalchemy.ext.declarative import declarative_base
-
 Base = declarative_base()
+
 
 class User(Base):
     """
