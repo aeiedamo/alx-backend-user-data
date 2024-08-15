@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """DB module
 """
-from pickle import NONE
-from sqlite3 import IntegrityError
-from requests import session
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -49,7 +46,7 @@ class DB:
             newUser = User(email=email, hashed_password=hashed_password)
             self._session.add(newUser)
             self._session.commit()
-        except IntegrityError:
+            return newUser
+        except Exception:
             self._session.rollback()
-            newUser = None
-        return newUser
+            raise ValueError("User with email {} already exists".format(email))
