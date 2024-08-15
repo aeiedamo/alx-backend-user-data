@@ -38,20 +38,18 @@ class DB:
         Args:
             email (str): The email of the user.
             hashed_password (str): The hashed password of the user.
-            session_id (str, optional): The session ID of the user. Defaults to None.
-            reset_token (str, optional): The reset token of the user. Defaults to None.
 
         Returns:
             User: The newly created user object.
 
         Raises:
             ValueError: If the user cannot be added due to an IntegrityError.
-        """ 
+        """
         try:
             newUser = User(email=email, hashed_password=hashed_password)
             self._session.add(newUser)
             self._session.commit()
-            return newUser
         except IntegrityError:
             self._session.rollback()
-            raise ValueError("User with email {} already exists".format(email))
+            newUser = None
+        return newUser
